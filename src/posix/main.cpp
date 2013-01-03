@@ -81,7 +81,6 @@ int main (int argc, char *argv[])
     bool started = false;    
     while(!requestExit) {
         XNextEvent(dpy, &e);
-        pthread_mutex_lock(&renderContext.mutex);
         if(e.type==Expose && e.xexpose.count<1) {
             if (!started) {
                 start_process_thread(&processThreadHandle, &renderContext);
@@ -90,9 +89,10 @@ int main (int argc, char *argv[])
         } else if(e.type==ButtonPress) {
 
         } else if (e.type == ClientMessage) {
+            pthread_mutex_lock(&renderContext.mutex);
             requestExit = true;
+            pthread_mutex_unlock(&renderContext.mutex);
         }
-        pthread_mutex_unlock(&renderContext.mutex);
     }
     pthread_join(processThreadHandle, NULL);
     pthread_mutex_destroy(&renderContext.mutex);
