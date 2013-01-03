@@ -172,7 +172,7 @@ namespace math
         virtual const ConstMatrixRow<C,T> operator[](int idx) const { return ConstMatrixRow<C,T>(mData, idx);} 
         virtual T* GetRaw(){return mData;}
         virtual const T* GetRaw() const {return mData;}
-        virtual Vector<R,T> operator * (const Vector<R,T>&);
+        virtual Vector<R,T> operator * (const Vector<R,T>&) const;
         Matrix<R,C,T> inv () const;
         virtual Matrix<R,C,T>& operator= (const Matrix<R,C,T>& other)
         {
@@ -199,7 +199,7 @@ namespace math
         return result;
     }
 
-    template<unsigned R, unsigned C, class T> Vector<R,T> Matrix<R,C,T>::operator * (const Vector<R,T>& v)
+    template<unsigned R, unsigned C, class T> Vector<R,T> Matrix<R,C,T>::operator * (const Vector<R,T>& v) const
     {
         const T * vect  = v.GetRaw();
         Vector<R,T> res;  

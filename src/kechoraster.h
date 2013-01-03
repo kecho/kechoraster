@@ -33,6 +33,9 @@ namespace render
         Interpolation(const PixelIn& a, const PixelIn& b, const PixelIn& c);
         ~Interpolation();
         void Interpolate(const kechorender::math::Vector2& position, PixelIn& p);
+        const kechorender::math::Vector3& GetAttributeValues(int i) { return mAttributes[i];}
+        const kechorender::math::Matrix33& GetInterpolationMatrix(){return mInterpolationMat;}
+        const kechorender::math::Matrix33& GetOriginalMatrix(){return mOriginalMat;}
     private:
         int RegisterScalar(
             float a, float b, float c
@@ -40,6 +43,7 @@ namespace render
         float InterpolateScalar(int id, const kechorender::math::Vector2& positon);
         std::vector<kechorender::math::Vector3> mAttributes;
         kechorender::math::Matrix33 mInterpolationMat;
+        kechorender::math::Matrix33 mOriginalMat;
         int mCurrentAttribute;
 
     };

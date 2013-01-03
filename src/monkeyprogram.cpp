@@ -22,6 +22,7 @@ public:
     }
     virtual ~MyPixelIn(){}
     float color;
+    Vector4 w;
 };
 
 class MyVertexIn : public VertexIn
@@ -46,7 +47,6 @@ public:
         Vector3 normalizedNormal = wvNormal.Normalize();
         float intensity = saturate(normalizedLight.dot(normalizedNormal));
         mout.color = saturate( intensity * 2.0 + 0.2);
-        
     }
 
     float saturate(float v)
@@ -54,28 +54,22 @@ public:
         return v < 0 ? 0 : (v > 1 ? 1 : v);
     }
 
+
+    Vector3 transform(const Matrix44& m, const Vector3&v)
+    {
+        Vector4 t = (float[]) {v.x(), v.y(), v.z(), 1.0f};
+        Vector4 tr = m * t;
+        Vector3 result = (float[]){tr.x() / tr.w(), tr.y() / tr.w(), tr.z() / tr.w()};
+        return result;
+    }
+
     Vector3 toView(const Vector3& v)
     {
-        Vector4 t = (float[]) {v.x(), v.y(), v.z(), 1.0f};
-        Vector4 tr = mView * t;
-        Vector3 result = (float[]){tr.x() / tr.w(), tr.y() / tr.w(), tr.z() / tr.w()};
-        return result;
+        return transform(mView, v);
     }
-
     Vector3 toWorld(const Vector3& v)
     {
-        Vector4 t = (float[]) {v.x(), v.y(), v.z(), 1.0f};
-        Vector4 tr = mLocalToWorld * t;
-        Vector3 result = (float[]){tr.x() / tr.w(), tr.y() / tr.w(), tr.z() / tr.w()};
-        return result;
-    }
-
-    Vector3 toWView(const Vector3& v)
-    {
-        Vector4 t = (float[]) {v.x(), v.y(), v.z(), 1.0f};
-        Vector4 tr = mView * (mLocalToWorld * t);
-        Vector3 result = (float[]){tr.x() / tr.w(), tr.y() / tr.w(), tr.z() / tr.w()};
-        return result;
+        return transform(mLocalToWorld, v);
     }
 
     virtual void OnPixel(const PixelIn& in, PixelOut& out)

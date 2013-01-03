@@ -9,7 +9,7 @@ using namespace kechorender::math;
 using namespace kechorender::render;
 using namespace kechorender::core;
 
-void printMat(Matrix33& m)
+void printMat(const Matrix33& m)
 {
     for (int i = 0; i < 3; ++i)
     {
@@ -34,6 +34,7 @@ Interpolation::Interpolation(const PixelIn& a, const PixelIn& b, const PixelIn& 
          B.x(), B.y(), 1.0f,
          C.x(), C.y(), 1.0f
     };
+    mOriginalMat = equations;
     mInterpolationMat = equations.inv();
     for (int i = 0; i < a.GetNumOfAttributes(); ++i)
     {
@@ -146,6 +147,9 @@ void get_pixel_pos(PixelIn& pixelCoords, Point& deviceCoords, FrameBuffer * targ
     
     deviceCoords.x = static_cast<int>(NORMALIZE_DEV_COORDS(pos.x()) * static_cast<float>(target->GetW()));
     deviceCoords.y = static_cast<int>(NORMALIZE_DEV_COORDS(pos.y()) * static_cast<float>(target->GetH()));
+    //HACK: modify pixelCoords so the edges of the triangles do not artifact
+    pixelCoords.position[0] = TO_DEV_COORDS(deviceCoords.x, target->GetW()) * pixelCoords.position.w();
+    pixelCoords.position[1] = TO_DEV_COORDS(deviceCoords.y, target->GetH()) * pixelCoords.position.w();
 }
 
 struct Edge
@@ -169,7 +173,7 @@ void add_x_to_edge_state(EdgeState& s, Edge& e)
 {
     s.x += e.incX;
     s.errorCumulation += e.incError;
-    if (s.errorCumulation >= 1.0)
+    if (s.errorCumulation >= 0.5)
     {
         s.errorCumulation -= 1;
         s.x += e.w > 0 ? 1 : -1;
@@ -245,7 +249,7 @@ bool passZTest(float * zbuffer, int x, int y, float z, int W)
     return false;
 
 }
-void drawHorizontalLine(FrameBuffer& fb, int y, int cxl, int cxr, PixelIn&  current, Interpolation& interpolator, IRenderShader * shader, float * zbuffer)
+void drawSpan(FrameBuffer& fb, int y, int cxl, int cxr, PixelIn&  current, Interpolation& interpolator, IRenderShader * shader, float * zbuffer)
 {
     if (y < 0 || y >= fb.GetH())
     {
@@ -259,7 +263,7 @@ void drawHorizontalLine(FrameBuffer& fb, int y, int cxl, int cxr, PixelIn&  curr
         xl = xr;
         xr = t;
     }
-    for (int x = xl; x <= xr; ++x) 
+    for (int x = xl; x < xr; ++x) 
     {
         if (x < 0 || x > fb.GetW() )
         {
@@ -300,12 +304,13 @@ void KechoDevice::Triangulate(VertexIn& va, VertexIn& vb, VertexIn& vc)
     mShader->OnVertex(vb, *pb);
     mShader->OnVertex(vc, *pc);
 
-    Interpolation interpolator(*pa, *pb, *pc);
     
     Point a, b, c; 
     get_pixel_pos(*pa, a, mTarget);
     get_pixel_pos(*pb, b, mTarget);
     get_pixel_pos(*pc, c, mTarget);
+
+    Interpolation interpolator(*pa, *pb, *pc);
 
     Edge e[3];
     init_edge(e[0], a, b);
@@ -325,7 +330,7 @@ void KechoDevice::Triangulate(VertexIn& va, VertexIn& vb, VertexIn& vc)
         int currentY = left->A->y > right->A->y ? left->A->y : right->A->y;
         for (; currentY < limitY; ++currentY)
         {
-            drawHorizontalLine(*mTarget, currentY, stateLeft.x, stateRight.x, *pcurrent, interpolator, mShader, mZBuffer);
+            drawSpan(*mTarget, currentY, stateLeft.x, stateRight.x, *pcurrent, interpolator, mShader, mZBuffer);
             add_x_to_edge_state(stateLeft, *left);
             add_x_to_edge_state(stateRight, *right);
         } 
