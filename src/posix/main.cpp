@@ -17,6 +17,7 @@ struct render_context
     cairo_surface_t * surface;
     cairo_t * cairoContext;
     ProgramInterface * program;
+    Display * display;
 };
 
 void * processThread(void * ptr)
@@ -29,6 +30,7 @@ void * processThread(void * ptr)
         ctx->program->Render();
         cairo_set_source_surface(ctx->cairoContext,ctx->surface,0,0); 
         cairo_paint(ctx->cairoContext);
+        XFlush(ctx->display);
         pthread_mutex_unlock(&ctx->mutex);
     }
     return 0;
@@ -77,6 +79,7 @@ int main (int argc, char *argv[])
     renderContext.surface = imageSurface;
     renderContext.cairoContext = cr;
     renderContext.program = p;
+    renderContext.display = dpy;
     pthread_mutex_init(&renderContext.mutex, NULL);
     bool started = false;    
     while(!requestExit) {
