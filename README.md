@@ -1,3 +1,4 @@
+
 Rasterizer application, purely done in c++ for linux.
 
 To compile just run the make.sh script, then run the executable.
