@@ -1,3 +1,5 @@
+kechoraster
+===========
 
 Rasterizer application, purely done in c++ for linux.
 
@@ -9,3 +11,5 @@ Kleber Garcia (c) 2012
 
 kgarcia@ea.com
 kecho_garcia@hotmail.com
+
+![ScreenShot](https://raw.github.com/kecho/kechoraster/master/doc/monkeysnap.jpg)
